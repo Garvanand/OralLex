@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  agentos_minio:
+    image: minio/minio:latest
+    container_name: agentos_minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=minio_secret_key
+    volumes:
+      - minio_data:/data
+    networks:
+      - agentos_network
+    restart: unless-stopped
+
+  agentos_orallex:
+    build: 
+      context: ./Day05_OralLex
+      dockerfile: Dockerfile
+    container_name: agentos_orallex
+    ports:
+      - "8004:8000"
+    environment:
+      - ENVIRONMENT=production
+      - REDIS_URL=redis://agentos_redis:6379/4
+      - DATABASE_URL=postgresql://agentos:secret@agentos_postgres:5432/agentos
+      - CHROMA_DB_URL=http://agentos_chroma:8000
+      - MINIO_ENDPOINT=http://agentos_minio:9000
+      - MINIO_ACCESS_KEY=admin
+      - MINIO_SECRET_KEY=minio_secret_key
+    env_file:
+      - ./Day05_OralLex/.env
+    depends_on:
+      - agentos_postgres
+      - agentos_redis
+      - agentos_chroma
+      - agentos_minio
+    networks:
+      - agentos_network
+    restart: unless-stopped
+    volumes:
+      - ./Day05_OralLex/downloads:/app/downloads
+
+  agentos_orallex_worker:
+    build: 
+      context: ./Day05_OralLex
+      dockerfile: Dockerfile
+    container_name: agentos_orallex_worker
+    command: celery -A orallex.core.celery_app worker --loglevel=info
+    environment:
+      - ENVIRONMENT=production
+      - REDIS_URL=redis://agentos_redis:6379/4
+      - DATABASE_URL=postgresql://agentos:secret@agentos_postgres:5432/agentos
+      - CHROMA_DB_URL=http://agentos_chroma:8000
+      - MINIO_ENDPOINT=http://agentos_minio:9000
+    env_file:
+      - ./Day05_OralLex/.env
+    depends_on:
+      - agentos_postgres
+      - agentos_redis
+      - agentos_chroma
+      - agentos_minio
+      - agentos_orallex
+    networks:
+      - agentos_network
+    restart: unless-stopped
+
+volumes:
+  minio_data:
+
+networks:
+  agentos_network:
+    external: true

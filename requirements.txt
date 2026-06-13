@@ -1,0 +1,28 @@
+# AgentOS Day 05: OralLex Dependencies
+
+# Web & WebSockets
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+websockets==12.0
+
+# HTTP & API Clients
+httpx==0.27.0
+pydantic==2.7.4
+pydantic-settings==2.3.4
+loguru==0.7.2
+python-dotenv==1.0.1
+
+# Audio & ASR
+# We use Groq's API for Whisper ASR, so no heavy local PyTorch dependencies are needed for MVP
+groq==0.8.0
+
+# LLM & Orchestration
+langchain-core==0.2.9
+langchain-anthropic==0.1.15
+langchain-groq==0.1.5
+langgraph==0.1.1
+
+# Database & Vector Store
+chromadb==0.5.23
+SQLAlchemy==2.0.30
+asyncpg==0.29.0
